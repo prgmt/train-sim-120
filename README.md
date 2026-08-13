@@ -1,6 +1,6 @@
 # Train Sim 120
 
-A mobile-first, web-based proof-of-concept for a realistic train driving simulator. The experience is built from the driver’s cabin, with real-world controls (throttle, brake, reverser, AWS acknowledge, horn) and simple physics.
+A mobile-first, web-based proof-of-concept for a realistic train driving simulator. The experience is built from the driver’s cabin, with real-world controls (throttle, brake, reverser, AWS acknowledge, horn), a look-around camera, a detailed 3D dashboard, and simple physics.
 
 ## Stack
 
@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Then open `http://localhost:5173`.
+The dev server runs on port `5254` by default. Open `http://localhost:5254`.
 
 ## Controls
 
@@ -29,31 +29,24 @@ Then open `http://localhost:5173`.
 | Horn | `Space` / `H` | Horn button |
 | AWS acknowledge | `Enter` | AWS Ack button |
 | Reset scenario | `Backspace` | Reset button |
+| Look around | — | Drag / swipe (mouse or touch) |
 
 ## What’s in the POC
 
-- First-person driver cabin built from primitives
-- Moving track and sleepers
-- A distant signal that starts red
+- First-person driver cabin with mouse/touch look-around
+- 3D dashboard with speedometer, brake pressure, throttle, signal/distance displays, and a route screen
+- Moving track, sleepers, trees, poles, hills, and a distant signal
 - Simplified train physics (mass, tractive effort, rolling & air resistance, braking)
 - Instrument overlay: speed, speed limit, brake pressure, throttle, reverser, distance to signal, signal aspect, score
 - AWS-style alarm if you approach a red signal too fast or exceed the speed limit — acknowledge in time or emergency brake is applied
 - Scoring rewards smooth driving and staying within limits
+- GLTF cockpit loader — place a `public/models/cockpit.glb` model to replace the procedural cockpit
 
 ## Where to add real 3D models
 
-The cabin in `src/components/CabinScene.tsx` is placeholder geometry. Replace the `Cabin()` group with a GLTF/GLB model loaded via `@react-three/drei`'s `useGLTF`:
+The cabin in `src/components/Cockpit.tsx` is procedural placeholder geometry. `src/components/CockpitModel.tsx` already tries to load a GLTF cockpit from `/models/cockpit.glb` and falls back to the procedural cockpit if the model is missing.
 
-```tsx
-import { useGLTF } from '@react-three/drei'
-
-function Cabin() {
-  const { scene } = useGLTF('/models/cabin.glb')
-  return <primitive object={scene} />
-}
-```
-
-Drop model files into `public/models/`.
+Drop a model into `public/models/cockpit.glb` to swap in a real train cab. For other assets (tracks, scenery, signals) use the same pattern and attach them to the scene from `src/components/World.tsx`.
 
 ## Future features (roadmap)
 
