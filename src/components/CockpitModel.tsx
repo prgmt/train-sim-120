@@ -3,13 +3,18 @@ import * as THREE from 'three'
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Cockpit, CameraRig } from './Cockpit'
 
-const COCKPIT_MODEL_URL = '/models/cockpit.glb'
+// Drop a real cab model in public/models/cockpit.glb and set this to '/models/cockpit.glb'
+const COCKPIT_MODEL_URL: string | null = null
 
 export function CockpitModel() {
   const [model, setModel] = useState<THREE.Group | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    if (!COCKPIT_MODEL_URL) {
+      setError(true)
+      return
+    }
     const loader = new GLTFLoader()
     loader.load(
       COCKPIT_MODEL_URL,

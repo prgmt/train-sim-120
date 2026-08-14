@@ -1,5 +1,5 @@
-import { useRef, useMemo, forwardRef, useEffect, type RefObject } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useRef, useMemo, forwardRef, type RefObject } from 'react'
+import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTrainStore } from '../store/trainStore'
 
@@ -152,10 +152,10 @@ export function World() {
 
   return (
     <>
-      <Background />
+      <color attach="background" args={['#87ceeb']} />
+      <fog attach="fog" args={['#87ceeb', 50, 400]} />
       <ambientLight intensity={0.5} />
       <directionalLight position={[100, 80, -50]} intensity={1.2} castShadow />
-      <Fog />
       <Ground />
       <Hills />
       <Track ref={trackRef} />
@@ -268,24 +268,3 @@ const Signal = forwardRef<THREE.Group>(function Signal(_, ref) {
   )
 })
 
-function Fog() {
-  const { scene } = useThree()
-  useEffect(() => {
-    scene.fog = new THREE.Fog('#87ceeb', 50, 400)
-    return () => {
-      scene.fog = null
-    }
-  }, [scene])
-  return null
-}
-
-function Background() {
-  const { scene } = useThree()
-  useEffect(() => {
-    scene.background = new THREE.Color('#87ceeb')
-    return () => {
-      scene.background = null
-    }
-  }, [scene])
-  return null
-}
