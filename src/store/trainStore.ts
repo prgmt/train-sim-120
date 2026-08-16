@@ -13,6 +13,10 @@ export interface TrainState {
   speedLimit: number // m/s
   signalDistance: number // m ahead
   signalRed: boolean
+  startStation: string
+  endStation: string
+  routeDistance: number // m
+  finished: boolean
   score: number
   alarmTimer: number
 
@@ -35,6 +39,10 @@ const initial: Omit<TrainState, 'setControl' | 'reset' | 'toggleHorn' | 'acknowl
   speedLimit: 33.33, // 120 km/h
   signalDistance: 2000,
   signalRed: true,
+  startStation: 'Central',
+  endStation: 'Riverside',
+  routeDistance: 2000,
+  finished: false,
   score: 0,
   alarmTimer: 0,
 }

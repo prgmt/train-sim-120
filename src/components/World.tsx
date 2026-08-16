@@ -2,6 +2,7 @@ import { useRef, useMemo, forwardRef, type RefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTrainStore } from '../store/trainStore'
+import { Station } from './Station'
 
 const SLEEPER_SPACING = 1.5
 const SLEEPER_COUNT = 80
@@ -16,6 +17,8 @@ export function World() {
   const topRef = useRef<THREE.InstancedMesh>(null)
   const poleRef = useRef<THREE.InstancedMesh>(null)
   const signalRef = useRef<THREE.Group>(null)
+  const stationARef = useRef<THREE.Group>(null)
+  const stationBRef = useRef<THREE.Group>(null)
   const dummy = useMemo(() => new THREE.Object3D(), [])
 
   useFrame((_, delta) => {
@@ -42,7 +45,12 @@ export function World() {
     let newSpeed = store.speed + (force / mass) * dt
     if (newSpeed < 0) newSpeed = 0
 
-    const newDistance = store.distance + newSpeed * dt
+    let newDistance = store.distance + newSpeed * dt
+    const finished = newDistance >= store.routeDistance
+    if (finished) {
+      newDistance = store.routeDistance
+      newSpeed = 0
+    }
     const distToSignal = store.signalDistance - newDistance
 
     const approachingRed = store.signalRed && distToSignal > 0 && distToSignal < 600
@@ -84,6 +92,7 @@ export function World() {
       awsAlarm: alarm,
       alarmTimer,
       emergencyBrake: emergency,
+      finished,
       score,
     })
 
@@ -148,6 +157,13 @@ export function World() {
         mat.color.setHex(color)
       }
     }
+
+    if (stationARef.current) {
+      stationARef.current.position.set(3.7, 0, newDistance)
+    }
+    if (stationBRef.current) {
+      stationBRef.current.position.set(-3.7, 0, newDistance - store.routeDistance)
+    }
   })
 
   return (
@@ -162,6 +178,8 @@ export function World() {
       <Trees trunkRef={trunkRef} topRef={topRef} />
       <Poles ref={poleRef} />
       <Signal ref={signalRef} />
+      <Station ref={stationARef} name="Central" side="right" length={80} />
+      <Station ref={stationBRef} name="Riverside" side="left" length={100} />
     </>
   )
 }

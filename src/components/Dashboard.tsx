@@ -18,21 +18,27 @@ export function Dashboard() {
   const throttle = useTrainStore((s) => s.throttle)
   const reverser = useTrainStore((s) => s.reverser)
   const distance = useTrainStore((s) => s.distance)
+  const routeDistance = useTrainStore((s) => s.routeDistance)
+  const startStation = useTrainStore((s) => s.startStation)
+  const endStation = useTrainStore((s) => s.endStation)
+  const finished = useTrainStore((s) => s.finished)
   const signalDistance = useTrainStore((s) => s.signalDistance)
   const signalRed = useTrainStore((s) => s.signalRed)
   const score = useTrainStore((s) => s.score)
 
-  const dist = Math.max(0, Math.round(signalDistance - distance))
+  const distToSignal = Math.max(0, Math.round(signalDistance - distance))
+  const distToFinish = Math.max(0, Math.round(routeDistance - distance))
   const screenLines = useMemo(
     () => [
-      `Route: DEMO-120`,
+      `From: ${startStation}`,
+      `To: ${endStation}`,
+      `To finish: ${distToFinish} m`,
       `Speed limit: ${kmh(speedLimit)} km/h`,
-      `Distance: ${Math.round(distance)} m`,
-      `Next signal: ${dist} m`,
+      `Next signal: ${distToSignal} m`,
       `Aspect: ${signalRed ? 'RED' : 'GREEN'}`,
-      `Score: ${Math.floor(score)}`,
+      finished ? `>>> FINISHED <<<` : `Score: ${Math.floor(score)}`,
     ],
-    [speedLimit, distance, dist, signalRed, score],
+    [startStation, endStation, distToFinish, speedLimit, distToSignal, signalRed, finished, score],
   )
 
   return (
