@@ -36,7 +36,7 @@ const initial: Omit<TrainState, 'setControl' | 'reset' | 'toggleHorn' | 'acknowl
   awsAcknowledged: false,
   awsAlarm: false,
   emergencyBrake: false,
-  speedLimit: 33.33, // 120 km/h
+  speedLimit: 22.22, // 80 km/h (Regionova max)
   signalDistance: 2000,
   signalRed: true,
   startStation: 'Central',

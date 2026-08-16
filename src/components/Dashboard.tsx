@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { useTrainStore } from '../store/trainStore'
-import { RoundGauge, DigitalDisplay, Screen } from './Gauge'
 import * as THREE from 'three'
+import { useTrainStore } from '../store/trainStore'
+import { RoundGauge, Speedometer, DigitalDisplay, Screen, WarningLamp } from './Gauge'
 
 function kmh(ms: number) {
   return Math.round(ms * 3.6)
@@ -25,13 +25,16 @@ export function Dashboard() {
   const signalDistance = useTrainStore((s) => s.signalDistance)
   const signalRed = useTrainStore((s) => s.signalRed)
   const score = useTrainStore((s) => s.score)
+  const awsAlarm = useTrainStore((s) => s.awsAlarm)
+  const emergencyBrake = useTrainStore((s) => s.emergencyBrake)
+  const horn = useTrainStore((s) => s.horn)
 
   const distToSignal = Math.max(0, Math.round(signalDistance - distance))
   const distToFinish = Math.max(0, Math.round(routeDistance - distance))
+
   const screenLines = useMemo(
     () => [
-      `From: ${startStation}`,
-      `To: ${endStation}`,
+      `${startStation} -> ${endStation}`,
       `To finish: ${distToFinish} m`,
       `Speed limit: ${kmh(speedLimit)} km/h`,
       `Next signal: ${distToSignal} m`,
@@ -42,84 +45,71 @@ export function Dashboard() {
   )
 
   return (
-    <group position={[0, 0.82, -1.55]}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[3.8, 0.9, 0.12]} />
-        <meshStandardMaterial color="#151515" roughness={0.7} metalness={0.2} />
+    <group position={[0, 0.42, -1.12]}>
+      {/* main instrument panel */}
+      <mesh castShadow receiveShadow position={[0, 0, 0]}>
+        <boxGeometry args={[2.4, 0.75, 0.08]} />
+        <meshStandardMaterial color="#252525" roughness={0.6} metalness={0.1} />
       </mesh>
 
-      {/* left screen */}
-      <Screen lines={screenLines} position={[-1.35, 0.08, 0.07]} size={[0.9, 0.55]} />
-
-      {/* dual gauge screen placeholder */}
-      <mesh position={[-0.35, 0.08, 0.07]}>
-        <planeGeometry args={[0.7, 0.5]} />
-        <meshBasicMaterial color="#0a0a0a" />
-      </mesh>
-      <RoundGauge
-        value={kmh(speed)}
-        min={0}
-        max={160}
-        label="km/h"
-        unit=""
-        color="#ffaa00"
-        position={[-0.5, 0.12, 0.08]}
-        size={[0.26, 0.26]}
-      />
-      <RoundGauge
-        value={throttle * 100}
-        min={0}
-        max={100}
-        label="PWR"
-        unit="%"
-        color="#00aaff"
-        position={[-0.2, 0.12, 0.08]}
-        size={[0.26, 0.26]}
-      />
+      {/* left gauge cluster */}
+      <group position={[-0.72, 0.1, 0.05]}>
+        <RoundGauge
+          value={mbar(brake)}
+          min={0}
+          max={500}
+          label="BP"
+          unit="kPa"
+          color="#ff4400"
+          position={[-0.16, 0.12, 0]}
+          size={[0.22, 0.22]}
+        />
+        <RoundGauge
+          value={throttle * 100}
+          min={0}
+          max={100}
+          label="TR"
+          unit="%"
+          color="#00aaff"
+          position={[0.16, 0.12, 0]}
+          size={[0.22, 0.22]}
+        />
+        <DigitalDisplay
+          value={`${kmh(speedLimit)} km/h`}
+          label="LIMIT"
+          position={[0, -0.12, 0]}
+          size={[0.45, 0.12]}
+        />
+      </group>
 
       {/* main speedometer */}
-      <RoundGauge
-        value={kmh(speed)}
-        min={0}
-        max={160}
-        label="SPEED"
-        unit="km/h"
-        color="#ffaa00"
-        position={[0.35, 0.12, 0.08]}
-        size={[0.55, 0.55]}
-      />
+      <Speedometer value={kmh(speed)} max={120} position={[0.1, 0.14, 0.05]} size={[0.48, 0.48]} />
 
-      {/* right displays */}
-      <DigitalDisplay value={`${kmh(speedLimit)} km/h`} label="LIMIT" position={[0.95, 0.25, 0.08]} size={[0.55, 0.16]} />
-      <DigitalDisplay value={`${mbar(brake)} kPa`} label="BRAKE" position={[0.95, 0.05, 0.08]} size={[0.55, 0.16]} />
-      <DigitalDisplay value={reverser > 0 ? 'F' : reverser < 0 ? 'R' : 'N'} label="REV" position={[0.95, -0.15, 0.08]} size={[0.55, 0.16]} />
+      {/* INTEL screen and brake display */}
+      <group position={[0.82, 0.12, 0.05]}>
+        <Screen lines={screenLines} title="INTEL" position={[0, 0.1, 0]} size={[0.58, 0.36]} />
+        <DigitalDisplay
+          value={`${mbar(brake)} kPa`}
+          label="BRAKE"
+          textColor="#ff9900"
+          position={[0, -0.18, 0]}
+          size={[0.5, 0.12]}
+        />
+      </group>
 
-      <RoundGauge
-        value={mbar(brake)}
-        min={0}
-        max={500}
-        label="BP"
-        unit="kPa"
-        color="#ff4400"
-        position={[1.45, 0.18, 0.08]}
-        size={[0.35, 0.35]}
-      />
-      <RoundGauge
-        value={throttle * 100}
-        min={0}
-        max={100}
-        label="THR"
-        unit="%"
-        color="#00ff44"
-        position={[1.45, -0.22, 0.08]}
-        size={[0.35, 0.35]}
-      />
+      {/* warning lamps */}
+      <group position={[0.05, -0.2, 0.06]}>
+        <WarningLamp on={awsAlarm} color="#f00" position={[-0.4, 0, 0]} />
+        <WarningLamp on={!emergencyBrake && speed > 0.1} color="#0f0" position={[-0.14, 0, 0]} />
+        <WarningLamp on={reverser !== 0} color="#ffcc00" position={[0.14, 0, 0]} />
+        <WarningLamp on={horn} color="#0af" position={[0.4, 0, 0]} />
+      </group>
 
       {/* keypad */}
-      <Keypad position={[0.35, -0.28, 0.08]} />
+      <Keypad position={[0.82, -0.24, 0.06]} />
 
-      {/* button rows */}
-      <ButtonRow y={-0.42} />
+      {/* button row */}
+      <ButtonRow y={-0.33} />
     </group>
   )
 }
@@ -153,14 +143,14 @@ function Keypad({ position }: { position: [number, number, number] }) {
 
 function ButtonRow({ y }: { y: number }) {
   const count = 8
-  const startX = -1.5
-  const gap = 0.22
+  const startX = -0.9
+  const gap = 0.26
   return (
     <group position={[0, y, 0.07]}>
       {Array.from({ length: count }).map((_, i) => (
         <mesh key={i} position={[startX + i * gap, 0, 0]}>
           <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshStandardMaterial color={i === 2 ? '#c00' : i === 3 ? '#0c0' : '#555'} />
+          <meshStandardMaterial color={i === 2 ? '#c00' : i === 3 ? '#0c0' : '#666'} />
         </mesh>
       ))}
     </group>
