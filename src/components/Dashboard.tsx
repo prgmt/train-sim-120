@@ -31,6 +31,7 @@ export function Dashboard() {
 
   const distToSignal = Math.max(0, Math.round(signalDistance - distance))
   const distToFinish = Math.max(0, Math.round(routeDistance - distance))
+  const brakePipe = mbar(1 - brake)
 
   const screenLines = useMemo(
     () => [
@@ -55,12 +56,12 @@ export function Dashboard() {
       {/* left gauge cluster */}
       <group position={[-0.72, 0.1, 0.05]}>
         <RoundGauge
-          value={mbar(brake)}
+          value={brakePipe}
           min={0}
           max={500}
           label="BP"
           unit="kPa"
-          color="#ff4400"
+          color={brakePipe < 250 ? '#ff0000' : '#ffaa00'}
           position={[-0.16, 0.12, 0]}
           size={[0.22, 0.22]}
         />
@@ -89,9 +90,9 @@ export function Dashboard() {
       <group position={[0.82, 0.12, 0.05]}>
         <Screen lines={screenLines} title="INTEL" position={[0, 0.1, 0]} size={[0.58, 0.36]} />
         <DigitalDisplay
-          value={`${mbar(brake)} kPa`}
-          label="BRAKE"
-          textColor="#ff9900"
+          value={`${brakePipe} kPa`}
+          label="BRAKE PIPE"
+          textColor={brakePipe < 250 ? '#ff0000' : '#ff9900'}
           position={[0, -0.18, 0]}
           size={[0.5, 0.12]}
         />
